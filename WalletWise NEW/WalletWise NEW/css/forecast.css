@@ -1,0 +1,453 @@
+/* ==========================================================
+   WalletWise — Forecast & Time-Series Analysis
+   ----------------------------------------------------------
+   Design idea: the rest of WalletWise is a paper ledger /
+   passbook. This section reads like an analyst's report
+   clipped into that same ledger — same ink, same stamped
+   badge motif, but set on a faint graph-paper canvas instead
+   of ruled notebook paper, with a cool "ink-blue" accent used
+   only here to mark it as the analytical, evidence-based
+   section of the app.
+   ========================================================== */
+
+:root {
+  --forecast: #2e4a73;          /* deep ink-blue — trend / actual data */
+  --forecast-muted: #6d84ab;    /* softer ink-blue — forecast / projection */
+  --forecast-soft: #eef1f7;     /* pale wash — badges, chip backgrounds */
+  --forecast-band: rgba(46, 74, 115, 0.15);   /* confidence band fill */
+  --forecast-grid: rgba(46, 74, 115, 0.075);  /* graph-paper crosshatch */
+  --forecast-line: #dde3ee;     /* light blue-gray hairline (chart week gridlines, card border) */
+  --forecast-page-bg: #f8f9fb;  /* cool paper tone for this section only */
+  --bar-soft: #a9bcda;          /* neutral bar fill (weekly / weekday charts) */
+}
+
+/* ---------------- Page canvas ---------------- */
+
+#forecast.page {
+  background-color: var(--forecast-page-bg);
+  background-image:
+    repeating-linear-gradient(to right, transparent 0, transparent 23px, var(--forecast-grid) 23px, var(--forecast-grid) 24px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 23px, var(--forecast-grid) 23px, var(--forecast-grid) 24px);
+  border: 1px solid var(--forecast-line);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.forecast-heading-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.forecast-subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.model-badge {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forecast);
+  background: var(--forecast-soft);
+  border: 1px solid var(--forecast-band);
+  border-radius: 999px;
+  padding: 7px 13px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+/* ---------------- Empty state ---------------- */
+
+.forecast-empty-state {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.forecast-empty-state h2 {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  margin: 0 0 10px;
+}
+
+.forecast-empty-state p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  max-width: 440px;
+  margin: 0 auto 20px;
+  line-height: 1.55;
+}
+
+/* ---------------- KPI row ---------------- */
+
+.forecast-kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.forecast-stamp {
+  background: var(--card-bg);
+  border-color: var(--forecast);
+  color: var(--forecast);
+}
+
+.forecast-stamp .stamp-amount {
+  font-size: 1.3rem;
+}
+
+.forecast-kpi-cards {
+  flex: 1;
+  min-width: 280px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin-top: -2px;
+}
+
+.stat-value.forecast-color {
+  color: var(--forecast);
+}
+
+/* ---------------- Chart cards ---------------- */
+
+.forecast-chart-card .panel-head h2 {
+  color: var(--ink);
+}
+
+.forecast-chart-container {
+  width: 100%;
+}
+
+.forecast-chart-container-sm {
+  min-height: 190px;
+}
+
+.fc-chart-wrap {
+  position: relative;
+}
+
+.fc-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  font-family: var(--font-mono);
+}
+
+/* SVG element styling (classes applied by charts.js) */
+
+.fc-gridline { stroke: var(--border); stroke-width: 1; }
+.fc-gridline-v { stroke: var(--forecast-line); stroke-width: 1; stroke-dasharray: 2 3; }
+.fc-axis-label { fill: var(--ink-soft); font-size: 9.5px; font-family: var(--font-mono); }
+
+.fc-budget-line { stroke: var(--stamp-gold); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.fc-budget-label { fill: var(--stamp-gold); font-size: 9.5px; font-weight: 700; font-family: var(--font-mono); }
+
+.fc-band { fill: var(--forecast-band); stroke: none; }
+.fc-forecast-line { fill: none; stroke: var(--forecast-muted); stroke-width: 2.4; stroke-dasharray: 7 4; stroke-linecap: round; }
+.fc-actual-line { fill: none; stroke: var(--forecast); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.fc-actual-dot { fill: var(--forecast); }
+.fc-junction-dot { fill: var(--forecast); stroke: var(--card-bg); stroke-width: 2; }
+
+.fc-today-line { stroke: var(--ink-soft); stroke-width: 1.1; stroke-dasharray: 3 3; opacity: 0.6; }
+.fc-today-label { fill: var(--ink-soft); font-size: 9.5px; font-weight: 700; font-family: var(--font-mono); }
+
+.fc-bar { fill: var(--bar-soft); }
+.fc-bar-current { fill: var(--forecast); }
+.fc-trend-line { stroke: var(--debit); stroke-width: 2; }
+
+.fc-weekday-bar { fill: var(--bar-soft); }
+.fc-weekday-bar-max { fill: var(--forecast); }
+.fc-avg-line { stroke: var(--stamp-gold); stroke-width: 1.2; stroke-dasharray: 4 3; }
+
+.fc-bar, .fc-weekday-bar, .fc-weekday-bar-max, .fc-bar-current {
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+.fc-bar:hover, .fc-weekday-bar:hover, .fc-weekday-bar-max:hover, .fc-bar-current:hover {
+  opacity: 0.82;
+}
+
+/* ---------------- Chart tooltip ---------------- */
+
+.fc-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  box-shadow: 0 6px 14px rgba(31, 43, 36, 0.28);
+}
+
+.fc-tooltip.hidden {
+  display: none;
+}
+
+.fc-tooltip-date {
+  font-weight: 700;
+  margin-bottom: 4px;
+  opacity: 0.85;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fc-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fc-tooltip-range {
+  margin-top: 4px;
+  opacity: 0.72;
+  font-size: 0.66rem;
+}
+
+.fc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+
+.fc-dot-actual { background: var(--forecast); }
+.fc-dot-forecast { background: var(--forecast-muted); }
+
+/* ---------------- Legend ---------------- */
+
+.forecast-legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-actual { background: var(--forecast); }
+.legend-forecast { background: var(--forecast-muted); }
+.legend-budget { background: var(--stamp-gold); }
+
+/* ---------------- Explanation panel ---------------- */
+
+.forecast-explain-text {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0;
+  max-width: 68ch;
+}
+
+/* ---------------- Budget comparison bar (bullet-style) ---------------- */
+
+.budget-compare-track {
+  position: relative;
+  height: 30px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.budget-compare-actual {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--forecast);
+  transition: width 0.25s ease;
+  z-index: 2;
+}
+
+.budget-compare-projected {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--forecast-muted) 0,
+    var(--forecast-muted) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  background-color: var(--forecast-band);
+  transition: left 0.25s ease, width 0.25s ease;
+  z-index: 1;
+}
+
+.budget-compare-target-line {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--stamp-gold);
+  z-index: 3;
+  transition: left 0.25s ease;
+}
+
+.budget-compare-target-line::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--stamp-gold);
+  border-radius: 50%;
+}
+
+.budget-compare-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.budget-compare-labels strong {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.budget-status-line {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.budget-status-line.over { color: var(--debit); }
+.budget-status-line.under { color: var(--credit); }
+
+/* ---------------- Two-column chart grid ---------------- */
+
+.forecast-chart-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* ---------------- Insights list ---------------- */
+
+.insight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.insight-tag {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.insight-up .insight-tag {
+  background: var(--debit-bg);
+  color: var(--debit);
+}
+
+.insight-down .insight-tag {
+  background: var(--credit-bg);
+  color: var(--credit);
+}
+
+.insight-neutral .insight-tag {
+  background: var(--forecast-soft);
+  color: var(--forecast);
+}
+
+/* ---------------- Methodology footer ---------------- */
+
+.forecast-methodology-note {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  max-width: 74ch;
+  margin: 4px 0 0;
+  padding-top: 4px;
+}
+
+/* ---------------- Reliability tone variants (confidence stamp) ---------------- */
+
+.forecast-stamp.reliability-high { border-color: var(--credit); color: var(--credit); }
+.forecast-stamp.reliability-moderate { border-color: var(--stamp-gold); color: var(--stamp-gold); }
+.forecast-stamp.reliability-low { border-color: var(--debit); color: var(--debit); }
+.forecast-stamp.reliability-building { border-color: var(--ink-soft); color: var(--ink-soft); }
+
+.forecast-dashboard-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--forecast);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--forecast);
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  padding: 0;
+}
+
+.forecast-dashboard-link:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
